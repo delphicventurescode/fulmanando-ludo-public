@@ -1,0 +1,162 @@
+const canvas = document.getElementById('pong');
+const ctx = canvas.getContext('2d');
+
+// Game settings
+const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
+const playerX = 10, aiX = canvas.width - paddleWidth - 10;
+let playerY = canvas.height / 2 - paddleHeight / 2;
+let aiY = canvas.height / 2 - paddleHeight / 2;
+let playerSpeed = 0, aiSpeed = 4;
+let ballX = canvas.width / 2, ballY = canvas.height / 2;
+let ballSpeedX = 5, ballSpeedY = 5;
+let playerScore = 0, aiScore = 0;
+
+let gameOver = false;
+let winner = "";
+const WINNING_SCORE = 15;
+
+// Draw functions
+function drawRect(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawCircle(x, y, r, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2, false);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawText(text, x, y, color, size = '50px') {
+  ctx.fillStyle = color;
+  ctx.font = `${size} Arial`;
+  ctx.fillText(text, x, y);
+}
+
+// Game logic
+function resetBall() {
+  ballX = canvas.width / 2;
+  ballY = canvas.height / 2;
+  ballSpeedX = -ballSpeedX;
+  ballSpeedY = 5 * (Math.random() > 0.5 ? 1 : -1);
+}
+
+function update() {
+  if (gameOver) return;
+
+  // Move player paddle
+  playerY += playerSpeed;
+  if (playerY < 0) playerY = 0;
+  if (playerY + paddleHeight > canvas.height)
+    playerY = canvas.height - paddleHeight;
+
+  // Move AI paddle
+  if (aiY + paddleHeight / 2 < ballY)
+    aiY += aiSpeed;
+  else
+    aiY -= aiSpeed;
+  if (aiY < 0) aiY = 0;
+  if (aiY + paddleHeight > canvas.height)
+    aiY = canvas.height - paddleHeight;
+
+  // Move ball
+  ballX += ballSpeedX;
+  ballY += ballSpeedY;
+
+  // Top/bottom wall collision
+  if (ballY < 0 || ballY > canvas.height)
+    ballSpeedY = -ballSpeedY;
+
+  // Player paddle collision
+  if (
+    ballX < playerX + paddleWidth &&
+    ballY > playerY &&
+    ballY < playerY + paddleHeight
+  ) {
+    ballSpeedX = -ballSpeedX;
+    let deltaY = ballY - (playerY + paddleHeight / 2);
+    ballSpeedY = deltaY * 0.3;
+  }
+
+  // AI paddle collision
+  if (
+    ballX > aiX - ballSize &&
+    ballY > aiY &&
+    ballY < aiY + paddleHeight
+  ) {
+    ballSpeedX = -ballSpeedX;
+    let deltaY = ballY - (aiY + paddleHeight / 2);
+    ballSpeedY = deltaY * 0.3;
+  }
+
+  // Score left/right
+  if (ballX < 0) {
+    aiScore++;
+    if (aiScore >= WINNING_SCORE) {
+      gameOver = true;
+      winner = "AI";
+    }
+    resetBall();
+  }
+
+  if (ballX > canvas.width) {
+    playerScore++;
+    if (playerScore >= WINNING_SCORE) {
+      gameOver = true;
+      winner = "Player";
+    }
+    resetBall();
+  }
+}
+
+function render() {
+  // Clear
+  drawRect(0, 0, canvas.width, canvas.height, '#000');
+  // Center line
+  for (let i = 0; i < canvas.height; i += 30)
+    drawRect(canvas.width / 2 - 1, i, 2, 20, '#fff');
+  // Paddles
+  drawRect(playerX, playerY, paddleWidth, paddleHeight, '#fff');
+  drawRect(aiX, aiY, paddleWidth, paddleHeight, '#fff');
+  // Ball
+  drawCircle(ballX, ballY, ballSize, '#fff');
+  // Scores
+  drawText(playerScore, canvas.width / 4, 50, '#fff');
+  drawText(aiScore, 3 * canvas.width / 4, 50, '#fff');
+
+  // Win message
+  if (gameOver) {
+    drawText(`${winner} Wins!`, canvas.width / 2 - 180, canvas.height / 2, '#fff', '60px');
+    drawText(`Press R to Restart`, canvas.width / 2 - 130, canvas.height / 2 + 50, '#fff', '30px');
+  }
+}
+
+function gameLoop() {
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+// Keyboard controls
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowUp') playerSpeed = -7;
+  if (e.key === 'ArrowDown') playerSpeed = 7;
+
+  if ((e.key === 'r' || e.key === 'R') && gameOver) {
+    // Reset game
+    playerScore = 0;
+    aiScore = 0;
+    gameOver = false;
+    winner = "";
+    resetBall();
+  }
+});
+
+document.addEventListener('keyup', function (e) {
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') playerSpeed = 0;
+});
+
+// Start game
+gameLoop();
