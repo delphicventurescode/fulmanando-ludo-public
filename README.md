@@ -10,7 +10,7 @@
 
 [+]
 
-Just want to play Pong? You an do that too! Head over right here:
+Just want to play Pong? You can do that too! Head over right here:
 https://www.fulmo.live/fulmo-pilko-ludo
 
 [+]
