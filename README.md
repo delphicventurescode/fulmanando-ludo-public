@@ -6,6 +6,6 @@
 
 . **Status:** CODE COMPLETE>
 
-. **Website for Filmo** : http://www.fulmo.live/
+. **Website for Fulmo** : http://www.fulmo.live/
 
 [+]
